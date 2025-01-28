@@ -17,7 +17,6 @@ const listener = app.listen(process.env.PORT || 3000, () => {
 })
 
 const users = [];
-const exercises = [];
 
 app.post('/api/users', (req, res) => {
   const {username} = req.body;
@@ -77,5 +76,35 @@ app.post('/api/users/:_id/exercises', (req, res) => {
 });
 
 app.get('/api/users/:_id/logs', (req, res) => {
+  const { _id } = req.params;
+  const user = users.find(user => user._id === _id);
+
+  if(!user) return res.json({error: 'User not found'});
+  
+  const { log } = user;
+  const count = log.length;
+  const { from, to, limit } = req.query;
+  let filteredLog = log;
+
+  if (from || to) {
+    filteredLog = filteredLog.filter(entry => {
+      const entryDate = new Date(entry.date).getTime();
+      const fromDate = from ? new Date(from).getTime() : -Infinity;
+      const toDate = to ? new Date(to).getTime() : Infinity;
+
+      return entryDate >= fromDate && entryDate <= toDate;
+    });
+  }
+
+  if (limit) {
+    filteredLog = filteredLog.slice(0, parseInt(limit));
+  }
+
+  res.json({
+    _id: user._id,
+    username: user.username,
+    count: count,
+    log: filteredLog
+  })
 
 });
