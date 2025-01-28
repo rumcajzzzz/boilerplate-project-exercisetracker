@@ -28,7 +28,8 @@ app.post('/api/users', (req, res) => {
   
   const newUser = {
     username, 
-    _id: users.length + 1
+    _id: (users.length + 1).toString(),
+    log: []
   }
 
   users.push(newUser);
@@ -49,19 +50,32 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   let { description, duration, date } = req.body;
   const _id = req.params._id;
 
-  const user = users.find(guy => guy._id === _id);
-  
+  if (!description) return res.json({ error: 'Description is required' });
+  if (!duration) return res.json({ error: 'Duration is required' });
 
-  if(!description) return res.json({error: 'Description is required'})
-  else if(!duration) { return res.json({error: 'Duration is required'}) }
-  else if(!date) {const exerciseDate = date ? new Date(date).toDateString() : new Date().toDateString()}
-  else if (!user) return res.json({error: 'User not found'}) 
-  else {
-      const newExercise = {
-        description,
-        duration: Number(duration),
-        date: exerciseDate
-      }
-      }
+  const user = users.find(guy => guy._id === _id);
+  if (!user) return res.json({error: 'User not found'});
+
+  const exerciseDate = date ? new Date(date).toDateString() : new Date().toDateString();
+ 
+  const newExercise = {
+    description,
+    duration: Number(duration),
+    date: exerciseDate
   }
-)
+
+  if (!user.log) user.log = [];
+  user.log.push(newExercise);
+
+  res.json({
+    _id: user._id,
+    username: user.username,
+    description: newExercise.description,
+    duration: newExercise.duration,
+    date: newExercise.date
+  });
+});
+
+app.get('/api/users/:_id/logs', (req, res) => {
+
+});
